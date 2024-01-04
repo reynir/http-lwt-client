@@ -1,0 +1,4 @@
+(test
+  (name test_fd_leak)
+  (modules test_fd_leak)
+  (libraries http-lwt-client lwt))
