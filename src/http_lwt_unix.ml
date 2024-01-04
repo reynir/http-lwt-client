@@ -223,7 +223,10 @@ module Make (Runtime : RUNTIME) = struct
     write_loop ();
 
     Lwt.async (fun () ->
-      Lwt.join [read_loop_exited; write_loop_exited] >>= fun () ->
+      Lwt.join [
+        read_loop_exited >|= (fun () -> Log.debug (fun m -> m "read_loop_exited"));
+        write_loop_exited >|= (fun () -> Log.debug (fun m -> m "write_loop_exited"));
+      ] >>= fun () ->
 
       match socket with
       | `Plain socket ->
