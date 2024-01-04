@@ -27,5 +27,17 @@ let main () =
     | exception Unix.Unix_error (Unix.EBADF, _, _) ->
       Lwt.return_unit
 
+let setup_logs () =
+  let srcs = Logs.Src.list () in
+  let srcs =
+    List.filter (fun src ->
+        let name = Logs.Src.name src in
+        name = "http_lwt_unix" || name = "http_lwt_client")
+      srcs
+  in
+  List.iter (fun src -> Logs.Src.set_level src (Some Logs.Debug)) srcs;
+  Logs.set_reporter (Logs.format_reporter ())
+
 let _ =
+  setup_logs ();
   Lwt_main.run (main ())
