@@ -214,9 +214,11 @@ let single_h2_request ?config fd scheme user_pass host meth path headers body f 
       Lwt.wakeup_later notify_finished v;
     w := true
   in
-  let on_eof response data () = wakeup (Ok (response, data))
+  let on_eof connection response data () =
+    H2.Client_connection.shutdown connection;
+    wakeup (Ok (response, data))
   in
-  let response_handler response response_body =
+  let response_handler on_eof response response_body =
     let response : response = {
       version = { major = 2 ; minor = 0 } ;
       status = response.H2.Response.status ;
@@ -257,7 +259,7 @@ let single_h2_request ?config fd scheme user_pass host meth path headers body f 
     H2.Client_connection.create ?config ?push_handler:None ~error_handler ()
   in
   let request_body =
-    H2.Client_connection.request connection req ~error_handler ~response_handler
+    H2.Client_connection.request connection req ~error_handler ~response_handler:(response_handler (on_eof connection))
   in
   let read_buffer_size = match config with
     | Some config -> Some config.H2.Config.read_buffer_size
